@@ -1,106 +1,128 @@
+#define _XOPEN_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <time.h>		/* Pour rand */
 #include <unistd.h>
-#include <errno.h>
-
+#include <errno.h>		/* Pour errno */
+#include <sys/ipc.h>	/* Pour les IPC */
+#include <sys/shm.h>	/* Pour les segments de mémoire partagés */
+#include <sys/stat.h>	/* Pour les constantes */
+#include <fcntl.h>
 #include "fourmi.h"
 #include "zone.h"
-#include "ncurses.h"
 
-int main(int argc, char *argv[]) {
-	WINDOW *fen_box_sim, *fen_box_msg, *fen_box_outils, *fen_outils;
-	MEVENT event;
-	int ch, i, item_actif = OBSTACLE;
-	coord_t *coord;
+/*void simulation_initialiser() {
+	int i, j;
 
-	ncurses_initialiser();
-	simulation_initialiser();
+	for (i = 0; i < NBFOURMIS; i++)
+		threads_fourmis[i] = NULL;
 
-	fen_box_sim = creer_fenetre_box_sim();
-	fen_sim = creer_fenetre_sim();
-	fen_box_msg = creer_fenetre_box_msg();
-	fen_msg = creer_fenetre_msg();
-	fen_box_outils = creer_fenetre_box_outils();
-	fen_outils = creer_fenetre_outils();
-
-	mvprintw(LINES - 1, 0, "Tapez F2 pour quitter");
-	wrefresh(stdscr);
-	while((ch = getch()) != KEY_F(2)) {
-		switch(ch) {
-			case KEY_MOUSE :
-				if (getmouse(&event) == OK) {
-					/*wprintw(fen_msg, "Clic a la position %d %d de l'ecran\n", event.y, event.x);
-					wrefresh(fen_msg);*/
-					if (event.y == 32 && event.x >= 82 && event.x <= 98) {
-						item_actif = OBSTACLE;
-						mvwprintw(fen_outils, 0, 1, "X");
-						mvwprintw(fen_outils, 1, 1, " ");
-						wrefresh(fen_outils);
-						wprintw(fen_msg, "Outil obstacle active\n");
-						wrefresh(fen_msg);
-					}
-					else if (event.y == 33 && event.x >=82 && event.x <= 98) {
-						item_actif = FOURMI;
-						mvwprintw(fen_outils, 0, 1, " ");
-						mvwprintw(fen_outils, 1, 1, "X");
-						wrefresh(fen_outils);
-						wprintw(fen_msg, "Outil fourmi active\n");
-						wrefresh(fen_msg);
-					}
-					else if (event.y > 0 && event.y < NB_LIGNES_SIM + 1 && event.x > 0 && event.x < NB_COL_SIM + 1) {
-						switch (item_actif) {
-							case OBSTACLE :
-								pthread_mutex_lock(&grille[event.y - 1][event.x - 1].mutex);
-								if (grille[event.y - 1][event.x - 1].element == VIDE) {
-									grille[event.y - 1][event.x - 1].element = OBSTACLE;
-									mvwprintw(fen_sim, event.y - 1, event.x - 1, "#");
-									wprintw(fen_msg, "Ajout d'un obstacle a la position %d %d\n", event.y - 1, event.x - 1);
-								}
-								wrefresh(fen_sim);
-								wrefresh(fen_msg);
-								pthread_mutex_unlock(&grille[event.y - 1][event.x - 1].mutex);
-								break;
-							case FOURMI :
-								pthread_mutex_lock(&grille[event.y - 1][event.x - 1].mutex);
-								if (grille[event.y - 1][event.x - 1].element == VIDE) {
-									i = 0;
-									while (threads_fourmis[i] != NULL && i < MAX_FOURMIS)
-										i++;
-									if (i < MAX_FOURMIS) {
-										threads_fourmis[i] = (pthread_t *) malloc(sizeof(pthread_t));
-										grille[event.y - 1][event.x - 1].element = FOURMI;
-										grille[event.y - 1][event.x - 1].fourmi = threads_fourmis[i];
-										coord = (coord_t *) malloc(sizeof(coord_t));
-										coord->y = event.y - 1;
-										coord->x = event.x - 1;
-										pthread_create(threads_fourmis[i], NULL, routineFourmi, (void *) coord);
-										mvwprintw(fen_sim, event.y - 1, event.x - 1, "@");
-										wprintw(fen_msg, "Ajout d'une fourmi a la position %d %d\n", event.y - 1, event.x - 1);
-									}
-									else {
-										wprintw(fen_msg, "Nombre maximum de fourmis atteint\n");
-									}
-								}
-								wrefresh(fen_sim);
-								wrefresh(fen_msg);
-								pthread_mutex_unlock(&grille[event.y - 1][event.x - 1].mutex);
-								break;
-						}
-					}
-				}
-			break;
+	for (i = 0; i < HAUTEUR; i++) {
+		for (j = 0; j < LARGEUR; j++) {
+			grille[i][j].element = VIDE;
+			grille[i][j].fourmi = NULL;
+			pthread_mutex_init(&grille[i][j].mutex, NULL);
 		}
 	}
+}
 
-	delwin(fen_box_sim);
-	delwin(fen_sim);
-	delwin(fen_box_msg);
-	delwin(fen_msg);
-	delwin(fen_box_outils);
-	delwin(fen_outils);
-	simulation_stopper();
-	ncurses_stopper();
+void simulation_stopper() {
+	int i;
 
-	return 0;
+	for (i = 0; i < NBFOURMIS; i++) {
+		if (threads_fourmis[i] != NULL) {
+			pthread_cancel(*threads_fourmis[i]);
+			threads_fourmis[i] = NULL;
+		}
+	}
+}*/
+
+unsigned char* analyserZone(int fd) {
+	/* TODO Fonction qui analyse un fichier de zone */
+	size_t i;
+	unsigned char caseBuffer;
+	unsigned char* zone = (unsigned char*) malloc(HAUTEUR*LARGEUR*sizeof(unsigned char));
+
+	lseek(fd, 0, SEEK_SET);
+
+	for(i = 0; i < HAUTEUR*LARGEUR; i++) {
+		if(read(fd, &caseBuffer, sizeof(unsigned char)) == -1) {
+			perror("Erreur de lecture du fichier ");
+			exit(EXIT_FAILURE);
+		}
+		zone[i] = caseBuffer;
+	}
+
+	return zone;
+}
+
+zone_t* creerZone(int fd, key_t cle) {
+	size_t i;
+	int shmid;
+	void* addr;
+	zone_t* zone;
+	unsigned char* grilleFichier;
+
+	srand(time(NULL));
+
+	zone = (zone_t*) malloc(sizeof(zone_t));
+
+	if((shmid = shmget(cle, HAUTEUR * LARGEUR * sizeof(case_t), S_IRUSR | S_IWUSR | IPC_CREAT)) == -1) {
+		perror("Erreur de création du segment ");
+		exit(EXIT_FAILURE);
+	}
+
+	addr = shmat(shmid, NULL, 0);
+	zone->hauteur = (size_t*) addr;
+	zone->largeur = (size_t*) zone->hauteur[1];
+	zone->grille = (case_t*) zone->largeur[1];
+
+	*zone->hauteur = (size_t)HAUTEUR;
+	*zone->largeur = (size_t)LARGEUR;
+
+	grilleFichier = analyserZone(fd);
+
+	for(i = 0; i < HAUTEUR*LARGEUR; i++) {
+		zone->grille[i].element = grilleFichier[i];
+	}
+
+	return zone;
+}
+
+zone_t* recupererZone(key_t cle) {
+	int shmid;
+	void* addr;
+	zone_t* zone;
+
+	zone = (zone_t*)malloc(sizeof(zone_t));
+
+	if((shmid = shmget(cle, 0, 0)) == -1) {
+		perror("Erreur de récupération du segment ");
+		exit(EXIT_FAILURE);
+	}
+
+	addr = shmat(shmid, NULL, 0);
+	zone->hauteur = (size_t*) addr;
+	zone->largeur = (size_t*) zone->hauteur[1];
+	zone->grille = (case_t*) zone->largeur[1];
+
+	return zone;
+}
+
+void initialiserZone(zone_t* zone) {
+	
+}
+
+int main(int argc, char *argv[]) {
+	if (argc != 2) {
+		fprintf(stderr, "Paramètres de la commande incorrectes. La commande est de la forme : %s <fichier_zone>\n", argv[0]);
+		fprintf(stderr, "Où :\n");
+		fprintf(stderr, "\t<fichier_zone> : Le chemin du fichier de zone à charger.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	/*simulation_initialiser();*/
+
+	exit(EXIT_SUCCESS);
 }

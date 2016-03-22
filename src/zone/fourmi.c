@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "ncurses.h"
 #include "fourmi.h"
 
 void* routineFourmi(void *args) {
