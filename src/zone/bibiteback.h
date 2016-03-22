@@ -6,10 +6,10 @@
 
 typedef struct bibite{
     int pv_max;
-    int pv_actuel; 
+    int pv_actuel;
     int pts_attaque;
     int type; /* PACIFIQUE || BELLIQUEUSE*/
-}bibite_t;
+} bibite_t;
 
 /* Création d'une bibite de référence à partir du fichier d'initialisation
  fd = descripteur de fichier */
@@ -41,6 +41,3 @@ void attaquer(fourmi_t* enemmi);
 
 /* Transforme une bibitte en source de nourriture */
 void mourrir(bibite_t* bibite);
-
-
-

@@ -1,5 +1,7 @@
 /* Fourmis
- Structures et fonctions: */
+Structures et fonctions: */
+
+#include "structures.h"
 
 #define SOLDATE 1
 #define OUVRIERE 2
@@ -9,14 +11,13 @@ typedef struct fourmi {
     coord_t* position_fourmiliere;
     /* Permet à la fourmi de savoir d'où elle vient */
     int id_zone;
-	/* Permet à la fourmi de savoir de quelle fourmilière elle vient
-       Si elle rencontre une fourmi d'une autre fourmilère, elle peut l'affronter */
-    int id_fourmilière;
+
+	int id_fourmiliere;
 	/* Points de vie maximums */
     int pv_max;
 	/* Points de vie restants */
     int pv_actuel;
-	/* Quantité de nourriture que la fourmi peut stocker (si elle n'a pas besoin de points de vie) */
+	/* Quantite de nourriture que la fourmi peut stocker (si elle n'a pas besoin de points de vie) */
     int capacite_stockage;
 	/* Valeur de dégats */
     int pts_attaque;
@@ -28,7 +29,7 @@ typedef struct fourmi {
  * @param fd descripteur de fichier
  * @return fourmi créée
  */
-fourmi_t* creerFourmi(int fd);
+fourmi_t* creerFourmi(int fd, int type);
 
 /* Stats ouvriere (exemple):
  pv_max = 30;
@@ -60,14 +61,14 @@ void* deplacementSoldate(void* args);
  * Fonction permettant à la fourmi de consommer de la nourriture pour regenerer des PV
  * @param nourriture_t structure nourriture
  */
-void manger(nourriture_t* nourriture);
+void manger(fourmi_t* fourmi, nourriture_t* nourriture);
 
 /**
  * Fonction permettant à une fourmi de transporter de la nourriture
  * La fourmi charge un maximum de nourriture (jusqu'à ce qu'il n'y ait plus de nourriture ou qu'elle ne puisse plus en transporter plus)
  * @param nourriture_t structure nourriture
  */
-void chargerNourriture(nourriture_t* nourriture);
+void chargerNourriture(fourmi_t* fourmi, nourriture_t* nourriture);
 
 /**
  * Attaque une bibite
@@ -75,7 +76,7 @@ void chargerNourriture(nourriture_t* nourriture);
  * @param ennemi fourmi étrangère ou bibitte
  * On définit la nature de l'ennemi en fonction de la taille de structure passée en paramètre
  */
-void attaquer(void* ennemi);
+void attaquer(fourmi_t* fourmi, void* ennemi);
 
 /* Transforme une fourmi en source de nourriture */
 void mourrir(fourmi_t* fourmi);
@@ -84,6 +85,8 @@ void mourrir(fourmi_t* fourmi);
  Utilisé lors du passage d'une fourmi d'une zone A à une zone B
  La fourmi ne meurt pas, la zone arrête juste de la gérer */
 void changerZone(fourmi_t* fourmi);
+
+void* routineFourmi(void* args);
 
 /* La fourmi se met en attente d'un signal
    Lorsque ce signal est recu, la fourmi meurt
