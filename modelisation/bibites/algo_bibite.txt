@@ -1,0 +1,16 @@
+c_adj = case adjacente
+bibite{
+    pv_max  //20
+    pv_actuels
+    pts_attaque // 0 si pacifique, 10 sinon
+}
+
+Déplacement :
+    
+    Pacifique :
+        Déplacement aléatoire
+    
+    Belliqueuse :
+        Déplacment aléatoire
+        Si c_adj = fourmi
+            Attaquer
