@@ -1,0 +1,27 @@
+c_adj = case adjacente
+
+fourmi_soldate {
+	pv_max 		// 50 
+	pv_actuel
+	stockage 	// 0
+	pts_attaque // 10
+}
+
+Deplacement :
+
+ennemi = bibitte ou fourmi étrangère
+
+	Déplacements aléatoire dans un rayon de 10 cases de la fourilière
+	A chaque déplacement, perds 1 PV
+
+	Si c_adj = enemei ou c_adj + 1 = enemei
+		Attaque de la cible
+	Si pv_actuel < 10
+		Retour à la fourmilière
+
+Lorsqu'une fourmi est dans la fourmilère, elle régénère 1 pv par tour
+En se régénérant, une fourmi enlève un point de nourriture a la fourmilère
+
+tour = temps entre deux déplacements (définit par la vitesse de déplacement)
+
+

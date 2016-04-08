@@ -1,0 +1,58 @@
+c_adj = case adjacente
+
+fourmi_ouvriere {
+	pv_max 		// 30 
+	pv_actuel
+	stockage 	// 20
+	pts_attaque // 5
+}
+
+Déplacement : 
+Mode recherche de nourriture
+
+	Déplacement aléatoire
+	Si c_adj = nouriture
+		Si pv_actuel < 15
+			Manger N unités de nourrite 
+			// N = pv_max - pv_actuel
+		FSI
+		Si reste de la nourriture
+			Prendre le maximum de nourriture
+			Rentrer a la fourmilière
+		FSI
+	FSI
+	Si attaquée
+		Riposter 
+		// une ouvrière ne prends pas l'initiative d'un combat et se bat jusqu'à la mort
+	FSI
+
+Mode retour à la fourmilière
+La fourmi connait la position de la fourmilère, elle s'y dirige directement
+Deux algos possible : 
+	Ligne droite :
+		Se dirige directement vers la ruche sans tenir compte des obstacles
+		Si elle fait face à un obstacle
+			Déplacement aléatoire pour tenter de contourner l'obstacle
+	Dijsktra :
+		A chaque déplacement, la fourmi rééavalue le plus court chemin vers la ruche
+
+
+Si la fourmi est attaquée pendant son retour, elle se défendra
+
+
+
+
+
+Lorsqu'une fourmi est dans la fourmilère, elle régénère 1 pv par tour
+En se régénérant, une fourmi enlève un point de nourriture a la fourmilère
+
+tour = temps entre deux déplacements (définit par la vitesse de déplacement)
+
+
+
+
+
+			
+
+
+
