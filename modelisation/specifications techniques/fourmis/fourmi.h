@@ -10,6 +10,9 @@ typedef struct fourmi{
     coord_t* position_fourmiliere;
     /* Permet à la fourmi de savoir d'où elle vient */
     int id_zone;
+    /* Permet à la fourmi de savoir de quelle fourmilière elle vient
+       Si elle rencontre une fourmi d'une autre fourmilère, elle peut l'affronter */
+    int id_fourmilière;
     int pv_max;
     int pv_actuel
     int capacite_stockage
@@ -34,13 +37,13 @@ fourmi_t* creerFourmi(int fd);
 /* Fonction de déplacement d'une ouvriere
  fonction appelée au lancement d'un thread
  args = coordonnées de la fourmi
- L'algo est décrit dans le fichier "algo_ouvriere" (drive) */
+ L'algo est décrit dans le fichier "algo_ouvriere" */
 void* deplacementOuvriere(void* args);
 
 /* Fonction de déplacement d'une soldate
  fonction appelée au lancement d'un thread
  args = coordonnées de la fourmi
- L'algo est décrit dans le fichier "algo_soldate" (drive) */
+ L'algo est décrit dans le fichier "algo_soldate"  */
 void* deplacementSoldate(void* args);
 
 
@@ -65,6 +68,12 @@ void mourrir(fourmi_t* fourmi);
  Utilisé lors du passage d'une fourmi d'une zone A à une zone B
  La fourmi ne meurt pas, la zone arrête juste de la gérer */
 void detruire(fourmi_t* fourmi);
+
+/* La fourmi se met en attente d'un signal
+   Lorsque ce signal est recu, la fourmi meurt
+   (destruction de la fourmi + fin du thread)
+   Le signal à attenre dépends la zone d'origine de la fourmi (numero du signal à définir) */
+void gestionnaireMort(int sig);
 
 
 
