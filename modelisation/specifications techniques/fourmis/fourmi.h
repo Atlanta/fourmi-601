@@ -26,7 +26,7 @@ fourmi_t* creerFourmi(int fd);
 /* Stats ouvriere (exemple):
  pv_max = 30;
  capacite_stockage = 20;
- pts_attaque = 5; 
+ pts_attaque = 5;
 
  Stats soldate :
  pv_max = 50;
@@ -74,16 +74,3 @@ void detruire(fourmi_t* fourmi);
    (destruction de la fourmi + fin du thread)
    Le signal à attenre dépends la zone d'origine de la fourmi (numero du signal à définir) */
 void gestionnaireMort(int sig);
-
-
-
-
-
-
-
-
-
-
-
-
-

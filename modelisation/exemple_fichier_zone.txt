@@ -1,0 +1,11 @@
+001012032012100021231
+
+2 premiers bits (00) : id de la zone
+2 bits suivant (10) : nombre de bibites initiales de la zones
+Puis, bit à bit : Contenu de la case
+	0 = vide
+	1 = fourmi
+	2 = obstacle
+	3 = nourriture
+	4 = bibite
+	5 = fourmiliere
