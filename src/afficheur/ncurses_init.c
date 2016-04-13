@@ -11,6 +11,7 @@ void ncurses_initialiser() {
 	refresh();								/* Met a jour l'affichage */
 	curs_set(FALSE);						/* Masque le curseur */
 	mousemask(BUTTON1_CLICKED, NULL);		/* Active le clic gauche de la souris*/
+	timeout(0);								/* Rends les inputs (getch) non bloquants */
 }
 
 void ncurses_stopper() {

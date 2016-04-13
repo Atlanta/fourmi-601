@@ -6,8 +6,9 @@
 #include "zone.h"
 #include "nourriture.h"
 
-#define SOLDATE 1
-#define OUVRIERE 2
+#define FOURMILIERE 1
+#define SOLDATE 2
+#define OUVRIERE 3
 
 typedef struct fourmi {
     /* coord_t = struct contenant les positons X Y */

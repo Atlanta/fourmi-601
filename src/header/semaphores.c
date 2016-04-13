@@ -6,7 +6,6 @@
 #include <sys/sem.h>  /* Pour semget, semctl, semop */
 #include <errno.h>    /* Pour errno */
 #include <sys/stat.h> /* Pour S_IRUSR, S_IWUSR */
-#include <sys/msg.h>    /* Pour msgget, msgsnd, msgrcv */
 
 
 void init(int semid, int sem_num, int val) {

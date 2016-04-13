@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE
+
 #include <stdio.h>      /* Pour printf, perror */
 #include <stdlib.h>     /* Pour exit, EXIT_SUCCESS, EXIT_FAILURE */
 #include <sys/shm.h>    /* Pour shmget, shmat, shmdt */
@@ -20,17 +22,22 @@ segment_t* creerTerrain(key_t cle, int hauteur, int largeur) {
 		exit(EXIT_FAILURE);
 	}
 
-	addr = shmat(shmid, NULL, 0);
+	if((addr = shmat(shmid, NULL, 0)) == (void*)-1){
+		perror("Erreur lors de l'attachement du segment de memoire partagee ");
+		exit(EXIT_FAILURE);
+	}
 	terrain->hauteur = (int*) addr;
 	terrain->largeur = (int*) &terrain->hauteur[1];
 	terrain->cases = (int*) &terrain->largeur[1];
 	*(terrain->largeur) = largeur;
 	*(terrain->hauteur) = hauteur;
 
-	for(i = 0; i < (int)(*terrain->hauteur)*(int)(*terrain->largeur); i++) {
+	for(i = 0; i < (*terrain->hauteur)*(*terrain->largeur); i++) {
             /* TODO : assigner les valeurs au tableau */
 			terrain->cases[i] = 0;
 	}
+
+	terrain->cases[10] = 1;
 
 	return terrain;
 }
@@ -54,9 +61,8 @@ segment_t* recupererTerrain(key_t cle) {
 	return terrain;
 }
 
-void supprimerTerrain(key_t cle) {
+void detruireTerrain(key_t cle) {
 	int shmid;
-
 	if((shmid = shmget(cle, 0, 0)) == -1) {
 		perror("Erreur lors de la recuperation du segment de memoire partagee ");
 		exit(EXIT_FAILURE);

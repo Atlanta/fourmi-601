@@ -3,7 +3,7 @@
 #
 
 EXEC = zone
-OBJETS = fourmi.o
+OBJETS = ../header/semaphores.o ../header/memoirePartagee.o
 NOM_PROJET = zone
 
 #
