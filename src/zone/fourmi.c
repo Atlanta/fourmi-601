@@ -20,15 +20,12 @@ void* routineFourmi(void *args) {
 					caseSuivante = &grille[coord->y-1][coord->x];
 					if(pthread_mutex_trylock(&caseSuivante->mutex) == 0)
 						if(caseSuivante->element == VIDE) {
-							mvwprintw(fen_sim, coord->y, coord->x, " ");
 							caseSuivante->fourmi = grille[coord->y][coord->x].fourmi;
 							grille[coord->y][coord->x].element = VIDE;
 							caseSuivante->element = FOURMI;
 							grille[coord->y][coord->x].fourmi = NULL;
 							coord->y--;
-							mvwprintw(fen_sim, coord->y, coord->x, "@");
 							pthread_mutex_unlock(&caseSuivante->mutex);
-							wrefresh(fen_sim);
 						}
 				}
 				break;
@@ -37,15 +34,12 @@ void* routineFourmi(void *args) {
 					caseSuivante = &grille[coord->y+1][coord->x];
 					if(pthread_mutex_trylock(&caseSuivante->mutex) == 0)
 						if(caseSuivante->element == VIDE) {
-							mvwprintw(fen_sim, coord->y, coord->x, " ");
 							caseSuivante->fourmi = grille[coord->y][coord->x].fourmi;
 							grille[coord->y][coord->x].element = VIDE;
 							caseSuivante->element = FOURMI;
 							grille[coord->y][coord->x].fourmi = NULL;
 							coord->y++;
-							mvwprintw(fen_sim, coord->y, coord->x, "@");
 							pthread_mutex_unlock(&caseSuivante->mutex);
-							wrefresh(fen_sim);
 						}
 				}
 				break;
@@ -54,15 +48,12 @@ void* routineFourmi(void *args) {
 					caseSuivante = &grille[coord->y][coord->x-1];
 					if(pthread_mutex_trylock(&caseSuivante->mutex) == 0)
 						if(caseSuivante->element == VIDE) {
-							mvwprintw(fen_sim, coord->y, coord->x, " ");
 							caseSuivante->fourmi = grille[coord->y][coord->x].fourmi;
 							grille[coord->y][coord->x].element = VIDE;
 							caseSuivante->element = FOURMI;
 							grille[coord->y][coord->x].fourmi = NULL;
 							coord->x--;
-							mvwprintw(fen_sim, coord->y, coord->x, "@");
 							pthread_mutex_unlock(&caseSuivante->mutex);
-							wrefresh(fen_sim);
 						}
 				}
 				break;
@@ -71,15 +62,12 @@ void* routineFourmi(void *args) {
 					caseSuivante = &grille[coord->y][coord->x+1];
 					if(pthread_mutex_trylock(&caseSuivante->mutex) == 0)
 						if(caseSuivante->element == VIDE) {
-							mvwprintw(fen_sim, coord->y, coord->x, " ");
 							caseSuivante->fourmi = grille[coord->y][coord->x].fourmi;
 							grille[coord->y][coord->x].element = VIDE;
 							caseSuivante->element = FOURMI;
 							grille[coord->y][coord->x].fourmi = NULL;
 							coord->x++;
-							mvwprintw(fen_sim, coord->y, coord->x, "@");
 							pthread_mutex_unlock(&caseSuivante->mutex);
-							wrefresh(fen_sim);
 						}
 				}
 				break;
