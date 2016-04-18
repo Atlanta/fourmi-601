@@ -3,7 +3,7 @@
 #
 
 EXEC = editeur
-OBJETS = ncurses.o editeur.o
+OBJETS = ncurses.o
 NOM_PROJET =
 
 #

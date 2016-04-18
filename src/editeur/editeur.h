@@ -6,24 +6,30 @@
 
 #define HAUTEUR 30
 #define LARGEUR 100
-#define HAUTEURINFO 30
+#define HAUTEURINFO 19
 #define LARGEURINFO 30
+#define HAUTEUROUTIL 9
+#define LARGEUROUTIL 30
 
 #define VIDE 0
 #define FOURMI 1
 #define OBSTACLE 2
 
-#define ICONE_FOURMI ACS_DIAMOND
-#define ICONE_OBSTACLE ACS_CKBOARD
+#define ICONE_VIDE " "
+#define ICONE_FOURMI "@"
+#define ICONE_OBSTACLE "#"
 
-WINDOW *cadreEditeur, *cadreInfos, *editeur, *infos;
+WINDOW *cadreEditeur, *cadreInfos, *cadreOutil, *editeur, *infos, *outil;
+char outilActuel;
 
+void initialiserFenetres();
 void initialiserFichier(int fd);
 void chargerFichier(int fd);
-void changerOutil(int numeroOutil);
+void changerOutil(char numeroOutil);
 void refreshAll();
 int getFilePosition(souris_t souris); /* Renvoie la position dans le fichier par rapport au clic dans la fenêtre de zone */
 int isInZoneWindow(souris_t souris); /* Teste si l'utilisateur clique dans la fenêtre de zone */
 /*void enregistrer(int fd);*/
+void terminer();
 
 #endif
