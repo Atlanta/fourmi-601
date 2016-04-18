@@ -2,8 +2,8 @@
 # CONFIGURATION GENERALE
 #
 
-EXEC = binaire
-OBJETS = ncurses.o
+EXEC = editeur
+OBJETS = ncurses.o editeur.o
 NOM_PROJET =
 
 #
