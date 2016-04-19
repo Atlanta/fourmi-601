@@ -2,9 +2,10 @@
 # CONFIGURATION GENERALE
 #
 
-EXEC = editeur
-OBJETS = ncurses.o
-NOM_PROJET = editeur
+EXEC = simulateur
+OBJETS = structures.o ncurses_init.o fourmis.o
+NOM_PROJET = simulateur
+
 #
 # SUFFIXES
 #
@@ -23,28 +24,19 @@ OBJETS_O = $(OBJETS) $(EXEC_O)
 #
 
 CC = gcc
-CCFLAGS_STD = -Wall -O3 -Werror -ansi -pedantic
-CCFLAGS_DEBUG = -D _DEBUG_
-CCFLAGS = $(CCFLAGS_STD)
-CCLIBS = -lncurses
+CCFLAGS = -Wall -O3 -Wpadded -ansi -pedantic
 CCLIBS = -lncurses -pthread
 
 #
 # REGLES
 #
 
-all: msg $(OBJETS) $(EXEC_O)
+all: $(OBJETS) $(EXEC_O)
 	@echo "Creation des executables..."
 	@for i in $(EXEC); do \
 	$(CC) -o $$i $$i.o $(OBJETS) $(CCLIBS); \
 	done
 	@echo "Termine."
-
-msg:
-	@echo "Creation des objets..."
-
-debug: CCFLAGS = $(CCFLAGS_STD) $(CCFLAGS_DEBUG)
-debug: all
 
 #
 # REGLES PAR DEFAUT
@@ -84,9 +76,7 @@ ARCHIVE_FILES = *
 
 archive: clean
 	@echo "Creation de l'archive $(NOM_PROJET)$(shell date '+%y%m%d.tar.gz')..."
-	@REP=`basename "$$PWD"`; cd .. && tar zcf $(NOM_PROJET)$(shell date '+%y%m%d.tar.gz') $(addprefix "$$REP"/,$(ARCHIVE_FILES))
+	@REP=`basename $$PWD`; cd .. && tar zcf $(NOM_PROJET)$(shell date '+%y%m%d.tar.gz') $(addprefix $$REP/,$(ARCHIVE_FILES))
 	@echo "Termine."
 
 # DEPENDANCES
-ncurses.o: ncurses.c ncurses.h
-exemple.o: exemple.c ncurses.h

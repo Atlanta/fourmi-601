@@ -38,6 +38,8 @@ typedef struct zone {
 	case_t* grille;
 } zone_t;
 
+
+void gestionnaire (int signum);
 unsigned char* analyserZone(int fd); 	/* Crée le tableau des éléments d'un terrain à partir d'un fichier */
 zone_t* creerZone(int fd, key_t cle); 	/* Renvoie un pointeur vers la zone de mémoire partagée créée */
 zone_t* recupererZone(key_t cle);		/* Rencoie un pointeur vers une zone existante */
