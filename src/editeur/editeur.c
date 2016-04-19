@@ -4,11 +4,79 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <signal.h>
+#include <string.h>
 
 #include "editeur.h"
 
+void handler(int sig) {
+	char ch = 0, nomFichier[256];
+	if(sig == SIGINT) {
+		eraseBottomBar();
+
+		attron(COLOR_PAIR(4));
+		mvprintw(LINES-1, 0, "Voulez-vous enregistrer avant de quitter ? (O/N)");
+		attroff(COLOR_PAIR(4));
+		refresh();
+
+		while(1) {
+			ch = getch();
+			if (ch == 'O' || ch == 'o') {
+				eraseBottomBar();
+
+				attron(COLOR_PAIR(4));
+				mvprintw(LINES-1, 0, "Nom du fichier : ");
+				writing_mode(true);
+				mvscanw(LINES-1, 17, "%255s", nomFichier);
+				writing_mode(false);
+				attroff(COLOR_PAIR(4));
+
+				enregistrerFichier(nomFichier);
+
+				ncurses_stopper();
+				exit(EXIT_FAILURE);
+			}
+			else {
+				ncurses_stopper();
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
+}
+
+void drawBottomBar() {
+	int i;
+
+	for (i = 0; i < COLS; i++) {
+		mvaddch(LINES-1, i, ' ');
+	}
+	attron(COLOR_PAIR(4));
+	mvprintw(LINES-1, 0, "F2");
+	mvprintw(LINES-1, 11, "F8");
+	mvprintw(LINES-1, 26, "F10");
+	attroff(COLOR_PAIR(4));
+
+	mvprintw(LINES-1, 3, "Charger");
+	mvprintw(LINES-1, 14, "Enregistrer");
+	mvprintw(LINES-1, 30, "Quitter");
+
+	refresh();
+}
+
+void eraseBottomBar() {
+	int i;
+
+	attron(COLOR_PAIR(4));
+	for (i = 0; i < COLS; i++) {
+		mvaddch(LINES-1, i, ' ');
+	}
+	attroff(COLOR_PAIR(4));
+
+	refresh();
+}
+
 void initialiserFenetres() {
-	mvprintw(LINES-1, 0, "Appuyez sur F2 pour quitter.");
+	drawBottomBar();
 
 	cadreEditeur = newwin(HAUTEUR+2, LARGEUR+2, 0, 0);
 	cadreInfos = newwin(HAUTEURINFO+2, LARGEURINFO+2, 0, LARGEUR+2);
@@ -24,10 +92,15 @@ void initialiserFenetres() {
 	infos = newwin(HAUTEURINFO, LARGEURINFO, 1, LARGEUR+3);
 	outil = newwin(HAUTEUROUTIL, LARGEUROUTIL, HAUTEURINFO+3, LARGEUR+3);
 
+	scrollok(infos, true);
+
 	mvwprintw(outil, 0, 4, "Outil\tHotkey");
-	mvwprintw(outil, 3, 4, "  Vide\t0/V");
-	mvwprintw(outil, 5, 4, "@ Fourmi\t1/F");
-	mvwprintw(outil, 7, 4, "# Obstacle\t2/O");
+	mvwaddch(outil, 3, 4, ICONE_VIDE);
+	mvwprintw(outil, 3, 5, " Vide\t0/V");
+	mvwaddch(outil, 5, 4, ICONE_FOURMILIERE);
+	mvwprintw(outil, 5, 5, " Fourmil.\t1/F");
+	mvwaddch(outil, 7, 4, ICONE_OBSTACLE);
+	mvwprintw(outil, 7, 5, " Obstacle\t2/O");
 }
 
 void initialiserFichier(int fd) {
@@ -42,28 +115,45 @@ void initialiserFichier(int fd) {
 	}
 }
 
-void chargerFichier(int fd) {
-	int i;
+void chargerFichier(char* nomFichier) {
+	int fd, i;
 	char c;
-	char *vide = ICONE_VIDE, *fourmi = ICONE_FOURMI, *obstacle = ICONE_OBSTACLE;
+
+	if ((fd = open(nomFichier, O_RDWR)) == -1) {
+		if (errno == ENOENT) {
+			wprintw(infos, "Erreur lors du chargement du fichier : le fichier n'existe pas.\n");
+			return;
+		}
+		else {
+			wprintw(infos, "Erreur lors du chargement du fichier, veuillez réessayer.\n");
+			return;
+		}
+	}
+
 	for (i = 0; i < HAUTEUR*LARGEUR; i++) {
 		if(read(fd, &c, 1) == -1) {
-			perror("Erreur d'écriture dans le fichier ");
-			exit(EXIT_FAILURE);
+			wprintw(infos, "Erreur lors de l'écriture dans le fichier, veuillez réessayer.\n");
+			return;
 		}
 		switch (c) {
-			case VIDE:
-				mvwprintw(editeur, i/LARGEUR, i%LARGEUR, vide);
-				break;
-			case FOURMI:
-				mvwprintw(editeur, i/LARGEUR, i%LARGEUR, fourmi);
-				break;
+		case VIDE:
+			mvwaddch(editeur, i/LARGEUR, i%LARGEUR, ICONE_VIDE);
+			break;
+		case FOURMILIERE:
+			mvwaddch(editeur, i/LARGEUR, i%LARGEUR, ICONE_FOURMILIERE);
+			break;
 		case OBSTACLE:
-				mvwprintw(editeur, i/LARGEUR, i%LARGEUR, obstacle);
-				break;
+			mvwaddch(editeur, i/LARGEUR, i%LARGEUR, ICONE_OBSTACLE);
+			break;
 		}
-		/*lseek(fd, 1, SEEK_CUR);*/
 	}
+
+	if (close(fd) == -1) {
+		wprintw(infos, "Erreur lors de la fermeture du fichier.\n");
+		return;
+	}
+
+	wprintw(infos, "Fichier chargé.\n");
 }
 
 void changerOutil(char numeroOutil) {
@@ -73,15 +163,15 @@ void changerOutil(char numeroOutil) {
 		mvwprintw(outil, i, 2, " ");
 	}
 	switch (numeroOutil) {
-		case VIDE:
-			mvwaddch(outil, 3, 2, ACS_DIAMOND);
-			break;
-		case FOURMI:
-			mvwaddch(outil, 5, 2, ACS_DIAMOND);
-			break;
-		case OBSTACLE:
-			mvwaddch(outil, 7, 2, ACS_DIAMOND);
-			break;
+	case VIDE:
+		mvwaddch(outil, 3, 2, ACS_RARROW);
+		break;
+	case FOURMILIERE:
+		mvwaddch(outil, 5, 2, ACS_RARROW);
+		break;
+	case OBSTACLE:
+		mvwaddch(outil, 7, 2, ACS_RARROW);
+		break;
 	}
 	outilActuel = numeroOutil;
 }
@@ -96,7 +186,7 @@ void refreshAll() {
 	refresh();
 }
 
-int getFilePosition(souris_t s) {
+int getPosition(souris_t s) {
 	return (s.y-1) * LARGEUR + (s.x-1);
 }
 
@@ -106,91 +196,125 @@ int isInZoneWindow(souris_t s) {
 	return 0;
 }
 
-void terminer() {
+void ecrireFichier(int fd) {
+	int i;
+
+	for (i = 0; i < HAUTEUR*LARGEUR; i++) {
+		if (write(fd, &grille[i], sizeof(char)) == -1) {
+			wprintw(infos, "Erreur lors de l'écriture dans le fichier, veuillez réessayer.\n");
+			return;
+		}
+	}
+}
+
+void enregistrerFichier(char* nomFichier) {
+	int fd;
+	char ch;
+
+	if(strlen(nomFichier) == 0) {
+		wprintw(infos, "Le nom du fichier ne peut pas être vide !\n");
+		return;
+	}
+
+	if ((fd = open(nomFichier, O_RDWR | O_CREAT | O_EXCL, 0755)) == -1) {
+		if (errno == EEXIST) {
+			if ((fd = open(nomFichier, O_RDWR)) == -1) {
+				wprintw(infos, "Erreur lors de l'ouverture du fichier, veuillez réessayer.\n");
+				return;
+			}
+			eraseBottomBar();
+			attron(COLOR_PAIR(4));
+			mvprintw(LINES-1, 0, "Le fichier existe déjà, voulez-vous le remplacer ? (O/N) ");
+			attroff(COLOR_PAIR(4));
+			refresh();
+			while(1) {
+				ch = getch();
+
+				if (ch == 'O' || ch == 'o') {
+					ecrireFichier(fd);
+					wprintw(infos, "Fichier enregistré.\n");
+					return;
+				}
+				else {
+					return;
+				}
+			}
+		}
+		else {
+			wprintw(infos, "Erreur lors de la création du fichier, veuillez réessayer.\n");
+			return;
+		}
+	}
+
+	ecrireFichier(fd);
+
+	if (close(fd) == -1) {
+		wprintw(infos, "Erreur lors de l'enregistrement du fichier, veuillez réessayer.\n");
+		return;
+	}
+
+	wprintw(infos, "Fichier enregistré.\n");
+}
+
+/* TODO Fonction de fin perso avec paramètre pour code exit */
+void terminer(int code) {
 	ncurses_stopper();
-	exit(EXIT_FAILURE);
+	exit(code);
 }
 
 int main(int argc, char* argv[]) {
-	int ch, fd, position;
-	char valeur[3] = {0, 1, 2};
-	char *vide = ICONE_VIDE, *fourmi = ICONE_FOURMI, *obstacle = ICONE_OBSTACLE;
+	int position, ch;
+	char nomFichier[256] = "";
 	souris_t curseur;
+	struct sigaction sig;
 
-	if (argc != 2) {
-		fprintf(stderr, "La commande est de la forme : %s <nom_fichier>\n", argv[0]);
+	nbTypesFourmi = 0;
+	nbBibites = 0;
+	periodiciteNourriture = 1;
+
+	sig.sa_handler = handler;
+	sigaction(SIGINT, &sig, NULL);
+
+	if (argc > 2) {
+		fprintf(stderr, "La commande est de la forme : %s [<nom_fichier>]\n", argv[0]);
 		fprintf(stderr, "Où :\n");
-		fprintf(stderr, "\t<nom_fichier> : Le nom du fichier de zone à créer ou à charger\n");
+		fprintf(stderr, "\t<nom_fichier> : Le nom du fichier de zone à charger (facultatif)\n");
 		exit(EXIT_FAILURE);
 	}
 
 	ncurses_initialiser();
 	ncurses_souris();
+	ncurses_couleurs();
 
 	initialiserFenetres();
 
 	refreshAll();
 
-	if ((fd = open(argv[1], O_RDWR | O_CREAT | O_EXCL, 0755)) == -1) {
-		if (errno == EEXIST) {
-			if ((fd = open(argv[1], O_RDWR)) == -1) {
-				perror("Erreur d'ouverture du fichier existant ");
-				terminer();
-			}
-			wprintw(infos, "Fichier trouvé, chargement du fichier...\n");
-			wrefresh(infos);
-			chargerFichier(fd);
-			wprintw(infos, "Chargement terminé.\n");
-			wrefresh(infos);
-		}
-		else {
-			perror("Erreur de création du fichier ");
-			terminer();
-		}
-	}
-
-	lseek(fd, 0, SEEK_END);
-	if (lseek(fd, 0, SEEK_CUR) == 0) { /* Si le fichier est vide, on l'initialise */
-		wprintw(infos, "Fichier inexistant, création du fichier...\n");
-		wrefresh(infos);
-		initialiserFichier(fd);
-		wprintw(infos, "Création terminée.\n");
-		wrefresh(infos);
-	}
-	lseek(fd, 0, SEEK_SET);
-
+	memset(grille, 0, HAUTEUR*LARGEUR);
 	changerOutil(VIDE);
+
+	if (argc == 2)
+		chargerFichier(argv[1]);
 
 	refreshAll();
 
-	while((ch = getch()) != KEY_F(2)) {
+	while((ch = getch()) != KEY_F(10)) {
 		if(ch == KEY_MOUSE) {
 			souris_getpos(&curseur);
 
 			if (isInZoneWindow(curseur)) {
-				position = lseek(fd, getFilePosition(curseur), SEEK_SET);
+				position = getPosition(curseur);
+				grille[position] = outilActuel;
 				switch (outilActuel) {
-					case VIDE:
-						if (write(fd, &valeur[VIDE], sizeof(char)) == -1) {
-							perror("Erreur d'écriture dans le fichier ");
-							terminer();
-						}
-						mvwprintw(editeur, curseur.y-1, curseur.x-1, vide);
-						break;
-					case FOURMI:
-						if (write(fd, &valeur[FOURMI], sizeof(char)) == -1) {
-							perror("Erreur d'écriture dans le fichier ");
-							terminer();
-						}
-						mvwprintw(editeur, curseur.y-1, curseur.x-1, fourmi);
-						break;
-					case OBSTACLE:
-						if (write(fd, &valeur[OBSTACLE], sizeof(char)) == -1) {
-							perror("Erreur d'écriture dans le fichier ");
-							terminer();
-						}
-						mvwprintw(editeur, curseur.y-1, curseur.x-1, obstacle);
-						break;
+				case VIDE:
+					mvwaddch(editeur, curseur.y-1, curseur.x-1, ICONE_VIDE);
+					break;
+				case FOURMILIERE:
+					mvwaddch(editeur, curseur.y-1, curseur.x-1, ICONE_FOURMILIERE);
+					break;
+				case OBSTACLE:
+					mvwaddch(editeur, curseur.y-1, curseur.x-1, ICONE_OBSTACLE);
+					break;
 				}
 			}
 		}
@@ -199,25 +323,42 @@ int main(int argc, char* argv[]) {
 			wprintw(infos, "Outil vide sélectionné\n");
 		}
 		else if (ch == '1' || ch == 'F') {
-			changerOutil(FOURMI);
+			changerOutil(FOURMILIERE);
 			wprintw(infos, "Outil fourmi sélectionné\n");
 		}
 		else if (ch == '2' || ch == 'O') {
 			changerOutil(OBSTACLE);
 			wprintw(infos, "Outil obstacle sélectionné\n");
 		}
+		else if (ch == KEY_F(2)) {
+			eraseBottomBar();
+			attron(COLOR_PAIR(4));
+			mvprintw(LINES-1, 0, "Nom du fichier : ");
+			writing_mode(true);
+			mvscanw(LINES-1, 17, "%255s", nomFichier);
+			writing_mode(false);
+			attroff(COLOR_PAIR(4));
+			chargerFichier(nomFichier);
+			drawBottomBar();
+		}
+		else if (ch == KEY_F(8)) {
+			eraseBottomBar();
+			attron(COLOR_PAIR(4));
+			mvprintw(LINES-1, 0, "Nom du fichier : ");
+			writing_mode(true);
+			mvscanw(LINES-1, 17, "%255s", nomFichier);
+			writing_mode(false);
+			attroff(COLOR_PAIR(4));
+			enregistrerFichier(nomFichier);
+			drawBottomBar();
+		}
+		else if (ch == KEY_F(10)) {
+			kill(getpid(), SIGINT);
+		}
 
 		refreshAll();
 	}
 
-	if (close(fd) == -1) {
-		perror("Erreur lors de la fermeture du fichier ");
-		terminer();
-	}
-
-	/* Arrêt de ncurses */
 	ncurses_stopper();
-
-
 	exit(EXIT_SUCCESS);
 }

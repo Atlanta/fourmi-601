@@ -8,6 +8,13 @@ Structures et fonctions: */
 #define SOLDATE 1
 #define OUVRIERE 2
 
+typedef struct type_fourmi {
+	unsigned char typePerso;
+	unsigned short vitesse;
+	unsigned short pvMax;
+	unsigned short capacite;
+} type_fourmi_t;
+
 typedef struct fourmi {
     /* coord_t = struct contenant les positons X Y */
     coord_t* position_fourmiliere;

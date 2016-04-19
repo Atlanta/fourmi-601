@@ -1,6 +1,8 @@
 #ifndef _NCURSES_
 #define _NCURSES_
 
+#include <ncurses.h>
+
 typedef struct {
 	int x;
 	int y;
@@ -35,5 +37,7 @@ void ncurses_souris();
  * @return OK si reussite
  */
 int souris_getpos(souris_t* souris);
+
+void writing_mode(bool b);
 
 #endif
