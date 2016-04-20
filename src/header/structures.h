@@ -6,8 +6,4 @@ typedef struct coord {
 	int y;
 } coord_t;
 
-typedef struct nourriture {
-	int size;
-} nourriture_t;
-
 #endif

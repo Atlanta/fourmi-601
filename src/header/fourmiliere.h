@@ -3,15 +3,6 @@
 
 #include "fourmi.h"
 
-typedef struct type_fourmi {
-	char nom[63];				/* Bourrage structure */
-	unsigned char personnalite; /* permet d'appliquer des algorithmes différents aux fourmis */
-	unsigned short vitesse;
-	unsigned short pv;
-	unsigned short attaque;
-	unsigned short capacite;
-} type_fourmi_t;
-
 typedef struct fourmiliere {
 	int id;
 	fourmi_t** fourmis;

@@ -4,6 +4,7 @@ Structures et fonctions: */
 #define __FOURMI_H__
 
 #include "structures.h"
+#include "gestionnaireNourriture.h"
 
 #define SOLDATE 1
 #define OUVRIERE 2
@@ -12,6 +13,7 @@ typedef struct type_fourmi {
 	unsigned char typePerso;
 	unsigned short vitesse;
 	unsigned short pvMax;
+	unsigned short attaque;
 	unsigned short capacite;
 } type_fourmi_t;
 
@@ -68,7 +70,7 @@ void* deplacementSoldate(void* args);
 /** Fonction permettant à la fourmi de consommer de la nourriture pour regenerer des PV
  * @param nourriture_t structure nourriture
  */
-void manger(fourmi_t* fourmi, nourriture_t* nourriture);
+ void manger(fourmi_t* fourmi, nourriture_t* nourriture);
 
 /** Fonction permettant à une fourmi de transporter de la nourriture
  * La fourmi charge un maximum de nourriture (jusqu'à ce qu'il n'y ait plus de nourriture ou qu'elle ne puisse plus en transporter plus)

@@ -5,7 +5,7 @@ typedef struct nourriture {
 	unsigned short quantite;
 } nourriture_t;
 
-typedef struct gestNour {
+typedef struct gestionnaire_nourriture {
 	unsigned short delay;
 	unsigned char nbSources;
 	unsigned short qteNourritureParSource;

@@ -3,8 +3,8 @@
 #
 
 EXEC = editeur
-OBJETS = ncurses.o
-NOM_PROJET = editeur
+OBJETS = ncurses.o outilEditeur.o
+NOM_PROJET =
 #
 # SUFFIXES
 #
@@ -27,7 +27,6 @@ CCFLAGS_STD = -Wall -O3 -Werror -ansi -pedantic
 CCFLAGS_DEBUG = -D _DEBUG_
 CCFLAGS = $(CCFLAGS_STD)
 CCLIBS = -lncurses
-CCLIBS = -lncurses -pthread
 
 #
 # REGLES
