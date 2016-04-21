@@ -36,7 +36,7 @@ WINDOW *cadreEditeur, *cadreInfos, *cadreOutil, *cadreConfig, *editeur, *infos, 
 typedef struct fichier_zone {
 	char grille[HAUTEUR*LARGEUR]; /* Buffer de la grille */
 	unsigned char nbTypesFourmi;
-	type_fourmi_t* typesFourmi;
+	type_fourmi_t typesFourmi[NB_TYPES_FOURMI_MAX];
 	unsigned char nbBibites;
 	bibite_t* bibites;
 	gestionnaire_nourriture_t gestionnaireNourriture;
@@ -47,10 +47,10 @@ char outilActuel;
 
 void handler(int sig);
 
-void dessinerFenetreZone();
+void dessinerFenetreZone(fichier_zone_t* zone);
 void dessinerFenetreInfos();
 void dessinerFenetreOutils();
-void dessinerFenetreConfig();
+void dessinerFenetreConfig(fichier_zone_t* zone);
 
 void initialiserFenetres();
 void drawBottomBar();

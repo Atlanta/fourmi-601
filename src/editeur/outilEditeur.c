@@ -49,15 +49,57 @@ void eraseBottomBar() {
 	refresh();
 }
 
-void dessinerFenetreZone() {
-	
+void dessinerFenetreZone(fichier_zone_t* zone) {
+	int i;
+
+	werase(editeur);
+
+	for (i = 0; i < HAUTEUR*LARGEUR; i++) {
+		switch (zone->grille[i]) {
+			case VIDE :
+				mvwaddch(editeur, i/LARGEUR, i%LARGEUR, ICONE_VIDE);
+				break;
+			case FOURMILIERE:
+				mvwaddch(editeur, i/LARGEUR, i%LARGEUR, ICONE_FOURMILIERE);
+				break;
+			case OBSTACLE:
+				mvwaddch(editeur, i/LARGEUR, i%LARGEUR, ICONE_OBSTACLE);
+				break;
+		}
+	}
 }
 void dessinerFenetreInfos();
-void dessinerFenetreOutils();
-void dessinerFenetreConfig();
+void dessinerFenetreOutils() {
+	mvwaddch(outil, 2, 4, ICONE_VIDE);
+	mvwaddch(outil, 3, 4, ICONE_FOURMILIERE);
+	mvwaddch(outil, 4, 4, ICONE_OBSTACLE);
+	mvwprintw(outil, 0, 4, "Outil\tHotkey");
+	mvwprintw(outil, 2, 6, "Vide\tV");
+	mvwprintw(outil, 3, 6, "Fourmil.\tF");
+	mvwprintw(outil, 4, 6, "Obstacle\tO");
+}
+void dessinerFenetreConfig(fichier_zone_t* zone) {
+	int i;
+
+	werase(config);
+
+	mvwprintw(config, 0, 0, "Paramètre\t\tValeur");
+	mvwprintw(config, 2, 0, "Types de fourmi\t\t%hhu", zone->nbTypesFourmi);
+	mvwprintw(config, 3, 0, "Nb. de bibites\t\t%hhu", zone->nbBibites);
+	mvwprintw(config, 4, 0, "Tps. nourriture\t\t%hus", zone->gestionnaireNourriture.delay);
+	mvwprintw(config, 5, 0, "Nb. de sources\t\t%hhu", zone->gestionnaireNourriture.nbSources);
+	mvwprintw(config, 6, 0, "Qté. nourriture\t\t%hu", zone->gestionnaireNourriture.qteNourritureParSource);
+
+	for (i = 0; i < LARGEUR_CONFIG; i++) {
+		mvwaddch(config, 1, i, ACS_HLINE);
+	}
+	for (i = 0; i < HAUTEUR_CONFIG; i++) {
+		mvwaddch(config, i, 20, ACS_VLINE);
+	}
+}
 
 void initialiserFenetres() {
-	int i;
+	/*int i;*/
 
 	drawBottomBar();
 
@@ -81,67 +123,61 @@ void initialiserFenetres() {
 
 	scrollok(infos, true);
 
-	mvwaddch(outil, 2, 4, ICONE_VIDE);
-	mvwaddch(outil, 3, 4, ICONE_FOURMILIERE);
-	mvwaddch(outil, 4, 4, ICONE_OBSTACLE);
-	mvwprintw(outil, 0, 4, "Outil\tHotkey");
-	mvwprintw(outil, 2, 6, "Vide\t0/V");
-	mvwprintw(outil, 3, 6, "Fourmil.\t1/F");
-	mvwprintw(outil, 4, 6, "Obstacle\t2/O");
+	dessinerFenetreOutils();
 
-	mvwprintw(config, 0, 0, "Paramètre\t\tValeur");
+	/*mvwprintw(config, 0, 0, "Paramètre\t\tValeur");
 	mvwprintw(config, 2, 0, "Types de fourmi\t\t%d", 0);
 	mvwprintw(config, 3, 0, "Nb. de bibites\t\t%d", 0);
 	mvwprintw(config, 4, 0, "Tps. nourriture\t\t%ds", 1);
 	mvwprintw(config, 5, 0, "Nb. de sources\t\t%d", 0);
-	mvwprintw(config, 6, 0, "Qté. nourriture\t\t%d", 0);
+	mvwprintw(config, 6, 0, "Qté. nourriture\t\t%d ", 0);
 	for (i = 0; i < LARGEUR_CONFIG; i++) {
 		mvwaddch(config, 1, i, ACS_HLINE);
 	}
 	for (i = 0; i < HAUTEUR_CONFIG; i++) {
 		mvwaddch(config, i, 20, ACS_VLINE);
-	}
+	}*/
 }
 
 int chargerFichier(char* nomFichier, fichier_zone_t* zone) {
 	int fd, i;
-	unsigned char c;
 
 	if ((fd = open(nomFichier, O_RDWR)) == -1) {
 		if (errno == ENOENT) {
-			wprintw(infos, "Erreur lors du chargement du fichier :\n");
-			wprintw(infos, ERREUR);
-			wprintw(infos, "\n");
+			wprintw(infos, "Erreur lors du chargement du fichier : %s\n", ERREUR);
 			return EXIT_FAILURE;
 		}
 	}
 
 	for (i = 0; i < HAUTEUR*LARGEUR; i++) {
-		if(read(fd, &c, sizeof(unsigned char)) == -1) {
-			wprintw(infos, "Erreur lors de l'écriture dans le fichier :\n");
-			wprintw(infos, ERREUR);
-			wprintw(infos, "\n");
+		if(read(fd, &zone->grille[i], sizeof(unsigned char)) == -1) {
+			wprintw(infos, "Erreur lors de la lecture dans le fichier : %s\n", ERREUR);
 			return EXIT_FAILURE;
 		}
-		switch (c) {
-		case VIDE:
-			mvwaddch(editeur, i/LARGEUR, i%LARGEUR, ICONE_VIDE);
-			break;
+		switch (zone->grille[i]) {
 		case FOURMILIERE:
-			zone->grille[i] = FOURMILIERE;
 			mvwaddch(editeur, i/LARGEUR, i%LARGEUR, ICONE_FOURMILIERE);
 			break;
 		case OBSTACLE:
-			zone->grille[i] = OBSTACLE;
 			mvwaddch(editeur, i/LARGEUR, i%LARGEUR, ICONE_OBSTACLE);
 			break;
 		}
 	}
 
+	if(read(fd, &zone->nbTypesFourmi, sizeof(unsigned char)) == -1) {
+		wprintw(infos, "Erreur lors de la lecture dans le fichier : %s\n", ERREUR);
+		return EXIT_FAILURE;
+	}
+
+	for (i = 0; i < zone->nbTypesFourmi; i++) {
+		if(read(fd, &zone->typesFourmi[i], sizeof(type_fourmi_t)) == -1) {
+			wprintw(infos, "Erreur lors de la lecture dans le fichier : %s\n", ERREUR);
+			return EXIT_FAILURE;
+		}
+	}
+
 	if (close(fd) == -1) {
-		wprintw(infos, "Erreur lors de la fermeture du fichier :\n");
-		wprintw(infos, ERREUR);
-		wprintw(infos, "\n");
+		wprintw(infos, "Erreur lors de la fermeture du fichier : %s\n", ERREUR);
 		return EXIT_FAILURE;
 	}
 
@@ -192,22 +228,110 @@ int isInZoneWindow(souris_t s) {
 }
 
 void configurerTypeFourmi(fichier_zone_t* zone) {
-	int ch = 0;
-	int nbTypesFourmi = zone->nbTypesFourmi;
+	int i, ch = 0, choix = 0;
+	type_fourmi_t type = {"", 0, 0, 0, 0, 0};
 	werase(config);
 
 	mvwprintw(config, 1, 1, "%d. Ajouter un type", AJOUTER);
 	mvwprintw(config, 3, 1, "%d. Modifier un type", MODIFIER);
 
-	while(1) {
-		ch = getch();
-		switch (ch) {
-			case AJOUTER:
-				werase(config);
+	wrefresh(config);
 
+	while((ch = getch()) != 27) {
+		switch (ch) {
+			case '1':
+				werase(config);
+				if(zone->nbTypesFourmi >= NB_TYPES_FOURMI_MAX) {
+					wprintw(infos, "Le nombre maximum de types de fourmi a déjà été déclaré.\n");
+					werase(config);
+					dessinerFenetreConfig(zone);
+					return;
+				}
+				writing_mode(true);
+				mvwprintw(config, 1, 1, "Nom du type (15 cara. max) :");
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%15s", &type.nom);
+				if(strlen(type.nom) == 0) strcpy(type.nom, "Default");
+				werase(config);
+				mvwprintw(config, 1, 1, "Id du comportement perso. :");
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hhu", &type.typePerso);
+				werase(config);
+				mvwprintw(config, 1, 1, "Vitesse :");
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &type.vitesse);
+				werase(config);
+				mvwprintw(config, 1, 1, "PV maximum :");
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &type.pvMax);
+				werase(config);
+				mvwprintw(config, 1, 1, "Attaque :");
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &type.attaque);
+				werase(config);
+				mvwprintw(config, 1, 1, "Capacité de transport :");
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &type.capacite);
+				zone->typesFourmi[zone->nbTypesFourmi] = type;
+				zone->nbTypesFourmi = zone->nbTypesFourmi + 1;
+				wprintw(infos, "Type ajouté\n");
+				werase(config);
+				dessinerFenetreConfig(zone);
+				writing_mode(false);
+				refreshAll();
+				return;
+				break;
+			case '2':
+				if (zone->nbTypesFourmi == 0) {
+					wprintw(infos, "Il n'y a aucun type de fourmi à modifier\n");
+					werase(config);
+					dessinerFenetreConfig(zone);
+					return;
+				}
+				werase(config);
+				for (i = 0; i < zone->nbTypesFourmi; i++) {
+					mvwprintw(config, i, 1, "%d. %s", i, zone->typesFourmi[i].nom);
+				}
+				wrefresh(config);
+				while((choix = getch()) < 48 || choix > 57-(10-zone->nbTypesFourmi)) {}
+				choix -= 48;
+				werase(config);
+				writing_mode(true);
+				mvwprintw(config, 1, 1, "Nom du type (15 cara. max) :\n\n\n\nActuel : %s", zone->typesFourmi[choix].nom);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%15s", &type.nom);
+				werase(config);
+				mvwprintw(config, 1, 1, "Id du comportement perso. :\n\n\n\nActuel : %hhu", zone->typesFourmi[choix].typePerso);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hhu", &type.typePerso);
+				werase(config);
+				mvwprintw(config, 1, 1, "Vitesse :\n\n\n\nActuel : %hu", zone->typesFourmi[choix].vitesse);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &type.vitesse);
+				werase(config);
+				mvwprintw(config, 1, 1, "PV maximum :\n\n\n\nActuel : %hu", zone->typesFourmi[choix].pvMax);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &type.pvMax);
+				werase(config);
+				mvwprintw(config, 1, 1, "Attaque :\n\n\n\nActuel : %hu", zone->typesFourmi[choix].attaque);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &type.attaque);
+				werase(config);
+				mvwprintw(config, 1, 1, "Capacité de transport :\n\n\n\nActuel : %hu", zone->typesFourmi[choix].capacite);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &type.capacite);
+				zone->typesFourmi[choix] = type;
+				wprintw(infos, "Type %d modifié\n", choix);
+				werase(config);
+				dessinerFenetreConfig(zone);
+				writing_mode(false);
+				refreshAll();
+				return;
 				break;
 		}
 	}
+
+	werase(config);
 }
 
 int ecrireFichier(int fd, fichier_zone_t* zone) {
@@ -215,6 +339,16 @@ int ecrireFichier(int fd, fichier_zone_t* zone) {
 
 	for (i = 0; i < HAUTEUR*LARGEUR; i++) {
 		if (write(fd, &zone->grille[i], sizeof(char)) == -1) {
+			wprintw(infos, "Erreur lors de l'écriture dans le fichier : %s\n", ERREUR);
+			return EXIT_FAILURE;
+		}
+	}
+	if (write(fd, &zone->nbTypesFourmi, sizeof(unsigned char)) == -1) {
+		wprintw(infos, "Erreur lors de l'écriture dans le fichier : %s\n", ERREUR);
+		return EXIT_FAILURE;
+	}
+	for (i = 0; i < zone->nbTypesFourmi; i++) {
+		if (write(fd, &zone->typesFourmi[i], sizeof(type_fourmi_t)) == -1) {
 			wprintw(infos, "Erreur lors de l'écriture dans le fichier : %s\n", ERREUR);
 			return EXIT_FAILURE;
 		}

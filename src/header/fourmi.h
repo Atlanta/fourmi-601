@@ -10,6 +10,7 @@ Structures et fonctions: */
 #define OUVRIERE 2
 
 typedef struct type_fourmi {
+	char nom[15];
 	unsigned char typePerso;
 	unsigned short vitesse;
 	unsigned short pvMax;

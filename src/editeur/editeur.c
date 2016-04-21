@@ -1,11 +1,13 @@
+#define _POSIX_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <signal.h>
 #include <string.h>
+#include <signal.h>
 
 #include "outilEditeur.h"
 
@@ -18,7 +20,9 @@ int main(int argc, char* argv[]) {
 
 	zone.nbTypesFourmi = 0;
 	zone.nbBibites = 0;
-	zone.periodiciteNourriture.delay = 1;
+	zone.gestionnaireNourriture.delay = 0;
+	zone.gestionnaireNourriture.nbSources = 0;
+	zone.gestionnaireNourriture.qteNourritureParSource = 0;
 
 	sig.sa_handler = handler;
 	sigaction(SIGINT, &sig, NULL);
@@ -39,10 +43,13 @@ int main(int argc, char* argv[]) {
 	refreshAll();
 
 	memset(zone.grille, 0, HAUTEUR*LARGEUR);
+	memset(zone.typesFourmi, 0, NB_TYPES_FOURMI_MAX * sizeof(type_fourmi_t));
 	changerOutil(VIDE, &outilActuel);
 
 	if (argc == 2)
 		chargerFichier(argv[1], &zone);
+
+	dessinerFenetreConfig(&zone);
 
 	refreshAll();
 
@@ -66,17 +73,20 @@ int main(int argc, char* argv[]) {
 				}
 			}
 		}
-		else if (ch == '0' || ch == 'V') {
+		else if (ch == 'V' || ch == 'v') {
 			changerOutil(VIDE, &outilActuel);
 			wprintw(infos, "Outil vide sélectionné\n");
 		}
-		else if (ch == '1' || ch == 'F') {
+		else if (ch == 'F' || ch == 'f') {
 			changerOutil(FOURMILIERE, &outilActuel);
 			wprintw(infos, "Outil fourmi sélectionné\n");
 		}
-		else if (ch == '2' || ch == 'O') {
+		else if (ch == 'O' || ch == 'o') {
 			changerOutil(OBSTACLE, &outilActuel);
 			wprintw(infos, "Outil obstacle sélectionné\n");
+		}
+		else if (ch == 'T' || ch == 't') {
+			 configurerTypeFourmi(&zone);
 		}
 		else if (ch == KEY_F(2)) {
 			eraseBottomBar();
