@@ -20,6 +20,7 @@
 #define LARGEUR_CONFIG 30
 
 #define NB_TYPES_FOURMI_MAX 10 /* Totalement arbitraire, pour simplifier l'affichage */
+#define NB_BIBITES_MAX 10
 
 #define VIDE 0
 #define FOURMILIERE 1
@@ -38,7 +39,7 @@ typedef struct fichier_zone {
 	unsigned char nbTypesFourmi;
 	type_fourmi_t typesFourmi[NB_TYPES_FOURMI_MAX];
 	unsigned char nbBibites;
-	bibite_t* bibites;
+	bibite_t bibites[NB_BIBITES_MAX];
 	gestionnaire_nourriture_t gestionnaireNourriture;
 	unsigned char nbFourmilieres;
 	fourmiliere_t* fourmilieres;
@@ -61,6 +62,9 @@ int getPosition(souris_t souris); /* Renvoie la position de la souris par rappor
 int isInZoneWindow(souris_t souris); /* Teste si l'utilisateur clique dans la fenêtre de zone */
 
 void configurerTypeFourmi(fichier_zone_t* zone);
+void configurerBibites(fichier_zone_t* zone);
+void configurerGestionnaireNourriture(fichier_zone_t* zone);
+void configurerFourmiliere(fichier_zone_t* zone);
 
 void changerOutil(char numeroOutil, char* outilActuel);
 int chargerFichier(char* nomFichier, fichier_zone_t* zone);
