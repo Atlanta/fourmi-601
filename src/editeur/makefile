@@ -88,4 +88,11 @@ archive: clean
 
 # DEPENDANCES
 ncurses.o: ncurses.c ncurses.h
-exemple.o: exemple.c ncurses.h
+outilEditeur.o: outilEditeur.c outilEditeur.h ncurses.h \
+ ../header/bibite.h ../header/fourmi.h ../header/structures.h \
+ ../header/gestionnaireNourriture.h ../header/fourmi.h \
+ ../header/fourmiliere.h ../header/gestionnaireNourriture.h
+editeur.o: editeur.c outilEditeur.h ncurses.h ../header/bibite.h \
+ ../header/fourmi.h ../header/structures.h \
+ ../header/gestionnaireNourriture.h ../header/fourmi.h \
+ ../header/fourmiliere.h ../header/gestionnaireNourriture.h

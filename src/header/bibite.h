@@ -9,10 +9,10 @@
 #define BELLIQUEUSE 2
 
 typedef struct bibite {
-    int pv_max;
-    int pv_actuel;
-    int pts_attaque;
-    int type; /* PACIFIQUE || BELLIQUEUSE*/
+    unsigned char typePerso;
+	unsigned short vitesse;
+	unsigned short pvMax;
+	unsigned short attaque;
 } bibite_t;
 
 bibite_t* creerBibite(int fd, int type);

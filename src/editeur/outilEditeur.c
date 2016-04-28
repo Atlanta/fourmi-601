@@ -24,12 +24,16 @@ void drawBottomBar() {
 	}
 	attron(COLOR_PAIR(4));
 	mvprintw(LINES-2, 0, "T");
+	mvprintw(LINES-2, 23, "B");
+	mvprintw(LINES-2, 41, "N");
 	mvprintw(LINES-1, 0, "F2");
 	mvprintw(LINES-1, 11, "F8");
 	mvprintw(LINES-1, 26, "F10");
 	attroff(COLOR_PAIR(4));
 
 	mvprintw(LINES-2, 2, "Config. types fourmi");
+	mvprintw(LINES-2, 25, "Config. bibites");
+	mvprintw(LINES-2, 43, "Config. nourriture");
 	mvprintw(LINES-1, 3, "Charger");
 	mvprintw(LINES-1, 14, "Enregistrer");
 	mvprintw(LINES-1, 30, "Quitter");
@@ -82,25 +86,31 @@ void dessinerFenetreConfig(fichier_zone_t* zone) {
 	int i;
 
 	werase(config);
+	wrefresh(config);
 
-	mvwprintw(config, 0, 0, "Paramètre\t\tValeur");
-	mvwprintw(config, 2, 0, "Types de fourmi\t\t%hhu", zone->nbTypesFourmi);
-	mvwprintw(config, 3, 0, "Nb. de bibites\t\t%hhu", zone->nbBibites);
-	mvwprintw(config, 4, 0, "Tps. nourriture\t\t%hus", zone->gestionnaireNourriture.delay);
-	mvwprintw(config, 5, 0, "Nb. de sources\t\t%hhu", zone->gestionnaireNourriture.nbSources);
-	mvwprintw(config, 6, 0, "Qté. nourriture\t\t%hu", zone->gestionnaireNourriture.qteNourritureParSource);
+	mvwprintw(config, 1, 3, "Paramètre");
+	mvwprintw(config, 3, 1, "Types de fourmi");
+	mvwprintw(config, 4, 1, "Nb. de bibites");
+	mvwprintw(config, 5, 1, "Tps. nourriture");
+	mvwprintw(config, 6, 1, "Nb. de sources");
+	mvwprintw(config, 7, 1, "Qté. nourriture");
+
+	mvwprintw(config, 1, 22, "Valeur");
+	mvwprintw(config, 3, 23, "%hhu", zone->nbTypesFourmi);
+	mvwprintw(config, 4, 23, "%hhu", zone->nbBibites);
+	mvwprintw(config, 5, 23, "%hu", zone->gestionnaireNourriture.delay);
+	mvwprintw(config, 6, 23, "%hhu", zone->gestionnaireNourriture.nbSources);
+	mvwprintw(config, 7, 23, "%hu", zone->gestionnaireNourriture.qteNourritureParSource);
 
 	for (i = 0; i < LARGEUR_CONFIG; i++) {
-		mvwaddch(config, 1, i, ACS_HLINE);
+		mvwaddch(config, 2, i, ACS_HLINE);
 	}
 	for (i = 0; i < HAUTEUR_CONFIG; i++) {
-		mvwaddch(config, i, 20, ACS_VLINE);
+		mvwaddch(config, i, 19, ACS_VLINE);
 	}
 }
 
 void initialiserFenetres() {
-	/*int i;*/
-
 	drawBottomBar();
 
 	cadreEditeur = newwin(HAUTEUR+2, LARGEUR+2, 0, 0);
@@ -124,19 +134,6 @@ void initialiserFenetres() {
 	scrollok(infos, true);
 
 	dessinerFenetreOutils();
-
-	/*mvwprintw(config, 0, 0, "Paramètre\t\tValeur");
-	mvwprintw(config, 2, 0, "Types de fourmi\t\t%d", 0);
-	mvwprintw(config, 3, 0, "Nb. de bibites\t\t%d", 0);
-	mvwprintw(config, 4, 0, "Tps. nourriture\t\t%ds", 1);
-	mvwprintw(config, 5, 0, "Nb. de sources\t\t%d", 0);
-	mvwprintw(config, 6, 0, "Qté. nourriture\t\t%d ", 0);
-	for (i = 0; i < LARGEUR_CONFIG; i++) {
-		mvwaddch(config, 1, i, ACS_HLINE);
-	}
-	for (i = 0; i < HAUTEUR_CONFIG; i++) {
-		mvwaddch(config, i, 20, ACS_VLINE);
-	}*/
 }
 
 int chargerFichier(char* nomFichier, fichier_zone_t* zone) {
@@ -174,6 +171,23 @@ int chargerFichier(char* nomFichier, fichier_zone_t* zone) {
 			wprintw(infos, "Erreur lors de la lecture dans le fichier : %s\n", ERREUR);
 			return EXIT_FAILURE;
 		}
+	}
+
+	if(read(fd, &zone->nbBibites, sizeof(unsigned char)) == -1) {
+		wprintw(infos, "Erreur lors de la lecture dans le fichier : %s\n", ERREUR);
+		return EXIT_FAILURE;
+	}
+
+	for (i = 0; i < zone->nbBibites; i++) {
+		if(read(fd, &zone->bibites[i], sizeof(bibite_t)) == -1) {
+			wprintw(infos, "Erreur lors de la lecture dans le fichier : %s\n", ERREUR);
+			return EXIT_FAILURE;
+		}
+	}
+
+	if(read(fd, &zone->gestionnaireNourriture, sizeof(gestionnaire_nourriture_t)) == -1) {
+		wprintw(infos, "Erreur lors de la lecture dans le fichier : %s\n", ERREUR);
+		return EXIT_FAILURE;
 	}
 
 	if (close(fd) == -1) {
@@ -234,6 +248,7 @@ void configurerTypeFourmi(fichier_zone_t* zone) {
 
 	mvwprintw(config, 1, 1, "%d. Ajouter un type", AJOUTER);
 	mvwprintw(config, 3, 1, "%d. Modifier un type", MODIFIER);
+	mvwprintw(config, 5, 1, "Appuyez sur Esc. pour revenir");
 
 	wrefresh(config);
 
@@ -297,27 +312,33 @@ void configurerTypeFourmi(fichier_zone_t* zone) {
 				choix -= 48;
 				werase(config);
 				writing_mode(true);
-				mvwprintw(config, 1, 1, "Nom du type (15 cara. max) :\n\n\n\nActuel : %s", zone->typesFourmi[choix].nom);
+				mvwprintw(config, 1, 1, "Nom du type (15 cara. max) :");
+				mvwprintw(config, 5, 1, "Actuel : %s", zone->typesFourmi[choix].nom);
 				wrefresh(config);
 				mvwscanw(config, 3, 1, "%15s", &type.nom);
 				werase(config);
-				mvwprintw(config, 1, 1, "Id du comportement perso. :\n\n\n\nActuel : %hhu", zone->typesFourmi[choix].typePerso);
+				mvwprintw(config, 1, 1, "Id du comportement perso. :");
+				mvwprintw(config, 5, 1, "Actuel : %hhu", zone->typesFourmi[choix].typePerso);
 				wrefresh(config);
 				mvwscanw(config, 3, 1, "%hhu", &type.typePerso);
 				werase(config);
-				mvwprintw(config, 1, 1, "Vitesse :\n\n\n\nActuel : %hu", zone->typesFourmi[choix].vitesse);
+				mvwprintw(config, 1, 1, "Vitesse :");
+				mvwprintw(config, 5, 1, "Actuel : %hu", zone->typesFourmi[choix].vitesse);
 				wrefresh(config);
 				mvwscanw(config, 3, 1, "%hu", &type.vitesse);
 				werase(config);
-				mvwprintw(config, 1, 1, "PV maximum :\n\n\n\nActuel : %hu", zone->typesFourmi[choix].pvMax);
+				mvwprintw(config, 1, 1, "PV maximum :");
+				mvwprintw(config, 5, 1, "Actuel : %hu", zone->typesFourmi[choix].pvMax);
 				wrefresh(config);
 				mvwscanw(config, 3, 1, "%hu", &type.pvMax);
 				werase(config);
-				mvwprintw(config, 1, 1, "Attaque :\n\n\n\nActuel : %hu", zone->typesFourmi[choix].attaque);
+				mvwprintw(config, 1, 1, "Attaque :");
+				mvwprintw(config, 5, 1, "Actuel : %hu", zone->typesFourmi[choix].attaque);
 				wrefresh(config);
 				mvwscanw(config, 3, 1, "%hu", &type.attaque);
 				werase(config);
-				mvwprintw(config, 1, 1, "Capacité de transport :\n\n\n\nActuel : %hu", zone->typesFourmi[choix].capacite);
+				mvwprintw(config, 1, 1, "Capacité de transport :");
+				mvwprintw(config, 5, 1, "Actuel : %hu", zone->typesFourmi[choix].capacite);
 				wrefresh(config);
 				mvwscanw(config, 3, 1, "%hu", &type.capacite);
 				zone->typesFourmi[choix] = type;
@@ -332,6 +353,284 @@ void configurerTypeFourmi(fichier_zone_t* zone) {
 	}
 
 	werase(config);
+	dessinerFenetreConfig(zone);
+	refreshAll();
+}
+
+void configurerBibites(fichier_zone_t* zone) {
+	int ch = 0;
+	unsigned short choix = 0;
+	bibite_t bibite = {0, 0, 0, 0};
+	werase(config);
+
+	mvwprintw(config, 1, 1, "1. Ajouter une bibite");
+	mvwprintw(config, 3, 1, "2. Modifier une bibite");
+	mvwprintw(config, 5, 1, "Appuyez sur Esc. pour revenir");
+
+	wrefresh(config);
+
+	while((ch = getch()) != 27) {
+		switch (ch) {
+			case '1':
+				werase(config);
+				if(zone->nbBibites >= NB_BIBITES_MAX) {
+					wprintw(infos, "Le nombre maximum de types de bibites a déjà été déclaré.\n");
+					werase(config);
+					dessinerFenetreConfig(zone);
+					return;
+				}
+				writing_mode(true);
+
+				mvwprintw(config, 1, 1, "Id du comportement perso. :");
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hhu", &bibite.typePerso);
+				werase(config);
+
+				mvwprintw(config, 1, 1, "Vitesse :");
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &bibite.vitesse);
+				werase(config);
+
+				mvwprintw(config, 1, 1, "PV maximum :");
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &bibite.pvMax);
+				werase(config);
+
+				mvwprintw(config, 1, 1, "Attaque :");
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &bibite.attaque);
+				werase(config);
+
+				zone->bibites[zone->nbBibites] = bibite;
+				zone->nbBibites++;
+
+				wprintw(infos, "Bibite %hu ajouté\n", zone->nbBibites-1);
+				werase(config);
+				dessinerFenetreConfig(zone);
+
+				writing_mode(false);
+				refreshAll();
+				return;
+				break;
+			case '2':
+				if (zone->nbBibites == 0) {
+					wprintw(infos, "Il n'y a aucune bibite à modifier\n");
+					werase(config);
+					dessinerFenetreConfig(zone);
+					return;
+				}
+				werase(config);
+				mvwprintw(config, 1, 1, "Numéro de la bibite à modifier :");
+				wrefresh(config);
+
+				writing_mode(true);
+				mvwscanw(config, 3, 1, "%hu", &choix);
+
+				if (choix >= zone->nbBibites) {
+					writing_mode(false);
+					wprintw(infos, "La bibite %hu n'existe pas\n", choix);
+					werase(config);
+					dessinerFenetreConfig(zone);
+					return;
+				}
+
+				werase(config);
+				mvwprintw(config, 1, 1, "Id du comportement perso. :");
+				mvwprintw(config, 5, 1, "Actuel : %hhu", zone->bibites[choix].typePerso);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hhu", &zone->bibites[choix].typePerso);
+				werase(config);
+
+				mvwprintw(config, 1, 1, "Vitesse :");
+				mvwprintw(config, 5, 1, "Actuel : %hu", zone->bibites[choix].vitesse);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &zone->bibites[choix].vitesse);
+				werase(config);
+
+				mvwprintw(config, 1, 1, "PV maximum :");
+				mvwprintw(config, 5, 1, "Actuel : %hu", zone->bibites[choix].pvMax);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &zone->bibites[choix].pvMax);
+				werase(config);
+
+				mvwprintw(config, 1, 1, "Attaque :");
+				mvwprintw(config, 5, 1, "Actuel : %hu", zone->bibites[choix].attaque);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &zone->bibites[choix].attaque);
+				werase(config);
+
+				wprintw(infos, "Type %hu modifié\n", choix);
+				werase(config);
+				dessinerFenetreConfig(zone);
+
+				writing_mode(false);
+				refreshAll();
+				return;
+				break;
+		}
+	}
+
+	werase(config);
+	dessinerFenetreConfig(zone);
+	refreshAll();
+}
+
+void configurerGestionnaireNourriture(fichier_zone_t* zone) {
+	int ch = 0;
+	werase(config);
+
+	wrefresh(config);
+
+	mvwprintw(config, 1, 1, "1. Periodicité d'apparition");
+	mvwprintw(config, 3, 1, "2. Nombre de sources");
+	mvwprintw(config, 5, 1, "3. Qté. par source");
+	mvwprintw(config, 7, 1, "Appuyez sur Esc. pour revenir");
+
+	wrefresh(config);
+
+	while((ch = getch()) != 27) {
+		switch (ch) {
+			case '1':
+				werase(config);
+				writing_mode(true);
+
+				mvwprintw(config, 1, 1, "Periodicité d'apparition :");
+				mvwprintw(config, 5, 1, "Actuel : %hus", zone->gestionnaireNourriture.delay);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &zone->gestionnaireNourriture.delay);
+				werase(config);
+
+				wprintw(infos, "Périodicité configurée : %hu secondes\n", zone->gestionnaireNourriture.delay);
+
+				writing_mode(false);
+				ch = 27;
+
+				break;
+			case '2':
+				werase(config);
+				writing_mode(true);
+
+				mvwprintw(config, 1, 1, "Nombre de sources max. :");
+				mvwprintw(config, 5, 1, "Actuel : %hhu", zone->gestionnaireNourriture.nbSources);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hhu", &zone->gestionnaireNourriture.nbSources);
+				werase(config);
+
+				wprintw(infos, "Nombre de sources max. configuré : %hhu\n", zone->gestionnaireNourriture.nbSources);
+
+				writing_mode(false);
+				ch = 27;
+
+				break;
+			case '3':
+				werase(config);
+				writing_mode(true);
+
+				mvwprintw(config, 1, 1, "Qté. nourriture par source :");
+				mvwprintw(config, 5, 1, "Actuel : %hu", zone->gestionnaireNourriture.qteNourritureParSource);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &zone->gestionnaireNourriture.qteNourritureParSource);
+				werase(config);
+
+				wprintw(infos, "Qté. de nourriture par source configurée : %hu\n", zone->gestionnaireNourriture.qteNourritureParSource);
+
+				writing_mode(false);
+				ch = 27;
+
+				break;
+		}
+	}
+
+	dessinerFenetreConfig(zone);
+	refreshAll();
+}
+
+void configurerFourmiliere(fichier_zone_t* zone) {
+	int ch = 0;
+	souris_t curseur;
+	werase(config);
+
+	wrefresh(config);
+
+	mvwprintw(config, 1, 1, "Cliquez sur une foumilière pour la configurer");
+	mvwprintw(config, 3, 1, "Appuyez sur Esc. pour revenir");
+
+	wrefresh(config);
+
+	while((ch = getch()) != 27) {
+		switch (ch) {
+			case KEY_MOUSE:
+				souris_getpos(&curseur);
+				if (isInZoneWindow(curseur)) {
+					werase(config);
+				}
+				else {
+					wprintw(infos, "La case n'est pas une fourmilière.");
+					dessinerFenetreConfig(zone);
+					return;
+				}
+				werase(config);
+				writing_mode(true);
+
+				mvwprintw(config, 1, 1, "Periodicité d'apparition :");
+				mvwprintw(config, 5, 1, "Actuel : %hus", zone->gestionnaireNourriture.delay);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &zone->gestionnaireNourriture.delay);
+				werase(config);
+
+				wprintw(infos, "Périodicité configurée : %hu secondes\n", zone->gestionnaireNourriture.delay);
+				werase(config);
+				dessinerFenetreConfig(zone);
+
+				writing_mode(false);
+				refreshAll();
+
+				return;
+				break;
+			case '2':
+				werase(config);
+				writing_mode(true);
+
+				mvwprintw(config, 1, 1, "Nombre de sources max. :");
+				mvwprintw(config, 5, 1, "Actuel : %hhu", zone->gestionnaireNourriture.nbSources);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hhu", &zone->gestionnaireNourriture.nbSources);
+				werase(config);
+
+				wprintw(infos, "Nombre de sources max. configuré : %hhu\n", zone->gestionnaireNourriture.nbSources);
+				werase(config);
+				dessinerFenetreConfig(zone);
+
+				writing_mode(false);
+				refreshAll();
+
+				return;
+				break;
+			case '3':
+				werase(config);
+				writing_mode(true);
+
+				mvwprintw(config, 1, 1, "Qté. nourriture par source :");
+				mvwprintw(config, 5, 1, "Actuel : %hu", zone->gestionnaireNourriture.qteNourritureParSource);
+				wrefresh(config);
+				mvwscanw(config, 3, 1, "%hu", &zone->gestionnaireNourriture.qteNourritureParSource);
+				werase(config);
+
+				wprintw(infos, "Qté. de nourriture par source configurée : %hu\n", zone->gestionnaireNourriture.qteNourritureParSource);
+				werase(config);
+				dessinerFenetreConfig(zone);
+
+				writing_mode(false);
+				refreshAll();
+
+				return;
+				break;
+		}
+	}
+
+	werase(config);
+	dessinerFenetreConfig(zone);
+	refreshAll();
 }
 
 int ecrireFichier(int fd, fichier_zone_t* zone) {
@@ -352,6 +651,20 @@ int ecrireFichier(int fd, fichier_zone_t* zone) {
 			wprintw(infos, "Erreur lors de l'écriture dans le fichier : %s\n", ERREUR);
 			return EXIT_FAILURE;
 		}
+	}
+	if (write(fd, &zone->nbBibites, sizeof(unsigned char)) == -1) {
+		wprintw(infos, "Erreur lors de l'écriture dans le fichier : %s\n", ERREUR);
+		return EXIT_FAILURE;
+	}
+	for (i = 0; i < zone->nbBibites; i++) {
+		if (write(fd, &zone->bibites[i], sizeof(bibite_t)) == -1) {
+			wprintw(infos, "Erreur lors de l'écriture dans le fichier : %s\n", ERREUR);
+			return EXIT_FAILURE;
+		}
+	}
+	if (write(fd, &zone->gestionnaireNourriture, sizeof(gestionnaire_nourriture_t)) == -1) {
+		wprintw(infos, "Erreur lors de l'écriture dans le fichier : %s\n", ERREUR);
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;

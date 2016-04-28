@@ -40,10 +40,9 @@ int main(int argc, char* argv[]) {
 
 	initialiserFenetres();
 
-	refreshAll();
-
 	memset(zone.grille, 0, HAUTEUR*LARGEUR);
 	memset(zone.typesFourmi, 0, NB_TYPES_FOURMI_MAX * sizeof(type_fourmi_t));
+	memset(zone.bibites, 0, NB_BIBITES_MAX * sizeof(bibite_t));
 	changerOutil(VIDE, &outilActuel);
 
 	if (argc == 2)
@@ -87,6 +86,15 @@ int main(int argc, char* argv[]) {
 		}
 		else if (ch == 'T' || ch == 't') {
 			 configurerTypeFourmi(&zone);
+		}
+		else if (ch == 'B' || ch == 'b') {
+			 configurerBibites(&zone);
+		}
+		else if (ch == 'N' || ch == 'n') {
+			 configurerGestionnaireNourriture(&zone);
+		}
+		else if (ch == 'C' || ch == 'c') {
+			 configurerFourmiliere(&zone);
 		}
 		else if (ch == KEY_F(2)) {
 			eraseBottomBar();
